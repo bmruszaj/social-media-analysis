@@ -1,74 +1,59 @@
 # Social Media Analysis
 
-A data science project analysing Reddit discourse across three thematic areas: **AI-generated content**, **disinformation / fake news**, and **mental health & social media**. The project covers the full pipeline — from API data collection to semantic embeddings, LLM-based emotion analysis, and unsupervised topic modelling.
+This project analyses Reddit discourse across three thematic areas — AI-generated content, disinformation and fake news, and mental health on social media. The work spans the full analytical pipeline, from API-based data collection through semantic text representation, LLM-assisted emotion annotation, and unsupervised topic modelling.
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 | File | Description |
 |------|-------------|
-| `task1.ipynb` | Data collection, visual exploration, semantic analysis & emotion detection |
-| `task2.ipynb` | User participation analysis, sentiment impact & BERTopic topic modelling |
+| `task1.ipynb` | Data collection, exploratory visualisation, semantic analysis, and emotion detection |
+| `task2.ipynb` | User participation analysis, sentiment–engagement modelling, and BERTopic topic modelling |
 
 ---
 
-## Notebook 1 — Data Collection & Semantic Analysis (`task1.ipynb`)
+## Notebook 1 — Data Collection and Semantic Analysis (`task1.ipynb`)
 
 ### What I Did
 
-1. **Reddit API data collection (PRAW)**  
-   Discovered relevant subreddits by scanning keyword-tagged posts across three topics. Built a curated list of 24 subreddits and collected ~3,000 unique users and 476,842 activity records (posts + comments).
+**Reddit data collection via PRAW.** I started by identifying relevant subreddits through keyword-based post scanning across the three topic areas. This produced a curated list of 24 subreddits, from which approximately 3,000 unique user accounts and 476,842 activity records (posts and comments) were collected.
 
-2. **Visual exploration**  
-   - Interactive Plotly time-series chart of post volume per topic over time.  
-   - User popularity dashboard combining total score, content count, and received comment count.
+**Exploratory visualisation.** I plotted post volume over time as an interactive Plotly time-series, broken down by topic. A separate user-level dashboard combined total score, content count, and received comment count into a composite popularity view.
 
-3. **Semantic UMAP map**  
-   Encoded 1 500 Reddit messages with `all-mpnet-base-v2` (SentenceTransformers), reduced dimensionality with UMAP, and visualised clusters coloured by topic. *Finding: mental-health posts form the tightest semantic cluster; AI-content and disinformation clusters visibly overlap.*
+**Semantic embedding and UMAP projection.** I encoded a sample of 1,500 messages with `all-mpnet-base-v2` (SentenceTransformers) and projected them into two dimensions using UMAP. The resulting scatter plot revealed that mental-health posts form a notably tight semantic cluster, while AI-content and disinformation posts overlap considerably in the embedding space.
 
-4. **LLM emotion tagging**  
-   Called the **CLARIN API** (Llama 3.3) to label each message with a fine-grained emotion (anger, joy, sadness, anxiety, …) and sentiment polarity.
+**LLM-based emotion annotation.** I submitted each message to the CLARIN API (Llama 3.3) to obtain a fine-grained emotion label (anger, joy, sadness, anxiety, and others) as well as an overall sentiment polarity score.
 
-5. **Emotion heatmap & spike detection**  
-   Built a `subreddit × emotion` heatmap and implemented a statistical spike-detection algorithm. Automatically summarised what users discussed during each emotional spike using the LLM. *Finding: disinformation subreddits are dominated by anger; mental-health posts show the most diverse emotional profile.*
+**Emotion heatmap and temporal spike detection.** I built a subreddit-by-emotion frequency matrix and visualised it as a heatmap. A statistical spike-detection routine identified weeks with abnormal emotional intensity, and the LLM was used to summarise the content of those spikes automatically. Disinformation subreddits were consistently dominated by anger, whereas mental-health posts exhibited the most varied emotional profile across the full observation period.
 
 ### What I Learned
-- How to work responsibly with a rate-limited public API and design collection logic that stays within quota.
-- How to represent text semantically and visualise high-dimensional embeddings in 2D.
-- How to integrate a hosted LLM (CLARIN) into a data-science pipeline for structured annotation at scale.
-- Negative/angry content tends to cluster together and stands out semantically, even before any labelling.
+
+Working with the Reddit API at scale taught me how to design collection logic that respects rate limits while still gathering a statistically useful sample. Producing and interpreting UMAP projections gave me a clearer sense of what sentence-level embeddings actually capture about topical similarity. Integrating a generative LLM into the annotation pipeline — rather than relying solely on lexicon-based tools — showed how structured prompting can replace expensive manual labelling for large text corpora. One finding that stood out is that negatively toned content clusters distinctly in embedding space even before any sentiment label is applied, suggesting that tone is a primary axis of variation in these communities.
 
 ---
 
-## Notebook 2 — User Participation & Topic Modelling (`task2.ipynb`)
+## Notebook 2 — User Participation and Topic Modelling (`task2.ipynb`)
 
 ### What I Did
 
-1. **User activity analysis**  
-   Measured the distribution of posts and comments per user per topic using box plots and summary statistics. Identified cross-topic users with a co-occurrence matrix. *Finding: activity follows a strong Pareto distribution — a small number of power users generate most content.*
+**User activity analysis.** I examined the distribution of posts and comments per user per topic using box plots and descriptive statistics, and built a co-occurrence matrix to identify users active across multiple topic areas. Activity followed a strongly skewed distribution consistent with Pareto dynamics: a small proportion of users accounted for the majority of published content.
 
-2. **Sentiment impact on engagement**  
-   Tested whether post sentiment (LLM labels + TextBlob + DistilBERT) predicts score and comment count using Kruskal-Wallis tests and violin plots. *Finding: negative posts receive up to 2× more upvotes than positive ones in disinformation and AI-content topics; mental-health is the exception where neutral content scores highest.*
+**Sentiment–engagement analysis.** I tested whether post sentiment predicts engagement (score and comment count) separately for each topic, using Kruskal-Wallis tests and violin plots. Negative posts attracted roughly twice as many upvotes as positive posts in the disinformation and AI-content communities. Mental health was the exception — neutral posts scored highest there, which aligns with the supportive rather than confrontational character of those communities.
 
-3. **Sentiment model validation**  
-   Compared three sentiment classifiers (CLARIN LLM, TextBlob, DistilBERT fine-tuned on SST-2) via confusion matrices to assess agreement and calibration.
+**Sentiment model comparison.** I evaluated three sentiment classifiers side by side: labels from the CLARIN LLM, TextBlob polarity scores, and a DistilBERT model fine-tuned on SST-2. Confusion matrices were used to measure inter-method agreement and to identify systematic disagreements between the lexicon-based and transformer-based approaches.
 
-4. **BERTopic topic modelling**  
-   Trained a BERTopic model (`all-MiniLM-L6-v2` + UMAP + HDBSCAN + c-TF-IDF) on ~69 000 documents and discovered **29 micro-topics**. Visualised topic distributions globally and compared them between high- and low-popularity posts. Used Jensen-Shannon divergence to quantify topic-distribution differences.
+**BERTopic topic modelling.** I assembled a BERTopic pipeline using `all-MiniLM-L6-v2` embeddings, UMAP for dimensionality reduction, HDBSCAN for clustering, and c-TF-IDF for topic representation. Applied to approximately 69,000 documents, the model produced 29 coherent micro-topics. I compared topic distributions between high-scoring and low-scoring posts using Jensen-Shannon divergence to identify topics associated with greater audience engagement.
 
-5. **LLM-generated topic labels**  
-   Automatically described the top 10 BERTopic topics by passing representative keywords and sample documents to the CLARIN LLM.
+**Automated topic labelling.** I described the top 10 BERTopic topics in plain language by submitting their representative keywords and sample documents to the CLARIN LLM, producing human-readable topic names without manual inspection.
 
 ### What I Learned
-- How to design a statistically rigorous sentiment-vs-engagement analysis, including choosing the right non-parametric tests for skewed data.
-- How to build and tune a BERTopic pipeline end-to-end (embedding → UMAP → HDBSCAN → c-TF-IDF → LLM labelling).
-- Cross-validating NLP models from different paradigms (lexicon-based, fine-tuned transformer, generative LLM) reveals both their individual biases and where they agree.
-- Topic popularity is not random: certain micro-topics systematically attract higher engagement, providing actionable signals for content strategy or moderation.
+
+Designing the sentiment–engagement comparison required choosing the right statistical tests for highly skewed, non-normal data — Kruskal-Wallis rather than ANOVA — and interpreting effect sizes carefully rather than relying solely on p-values. Building the BERTopic pipeline from components (rather than using defaults) made it clear how sensitive topic granularity is to UMAP and HDBSCAN hyperparameters. Comparing three sentiment methods from different paradigms demonstrated that each captures a slightly different aspect of polarity, and that their disagreement is itself informative about ambiguous texts. Finally, the topic-level engagement analysis showed that thematic content is a meaningful predictor of post popularity, independent of sentiment.
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Category | Tools |
 |----------|-------|
@@ -85,10 +70,6 @@ A data science project analysing Reddit discourse across three thematic areas: *
 
 ---
 
-## 📊 Key Findings at a Glance
+## Summary of Results
 
-- **476,842** Reddit records collected across 3 topic areas from **~3,000 unique users**.
-- **Negative content drives higher engagement** in AI and disinformation communities (up to 2× more upvotes).
-- **Mental-health discourse is semantically cohesive** — the tightest cluster in UMAP space.
-- **29 micro-topics** discovered automatically, with disinformation and AI topics showing stronger thematic diversity than mental-health content.
-- Emotional spike analysis enables automatic event detection from social media without manual labelling.
+The dataset comprises 476,842 Reddit records from approximately 3,000 unique users across three topic areas. The analysis confirmed that negative content attracts significantly higher engagement in AI-content and disinformation communities, while mental-health communities show the opposite pattern. Semantic embedding and UMAP projection revealed clear topical structure in the data, with mental-health discourse forming the most internally coherent cluster. BERTopic identified 29 micro-topics within the corpus, and temporal spike detection combined with LLM summarisation provided an efficient way to surface the events and discussions driving sudden shifts in community emotion.
